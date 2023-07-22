@@ -15,3 +15,9 @@ model Star {
   name            String    @db.VarChar(255)
   constellation   String    @db.VarChar(255)
 }
+
+model Example {
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
