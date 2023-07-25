@@ -8,29 +8,49 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { LoadingPage } from "~/components/loading";
 import { NextPage } from "next/types";
+import { useState } from "react";
 
 // Need to do for dayjs to work properly
 dayjs.extend(relativeTime);
 
 const CreatePostWizard = () => {
   const { user } = useUser();
+  const [tweetContent, setTweetContent] = useState("");
+  const ctx = api.useContext();
+
+  // Calling private procedure function from posts.ts
+  const { mutate, isLoading: isPosting } = api.posts.create.useMutation({
+    onSuccess: () => {
+      setTweetContent("");
+      ctx.posts.getAll.invalidate();
+    },
+  });
 
   if (!user) return null;
 
   return (
-    <div className="flex w-full gap-4 ">
-      <Image
-        src={user.profileImageUrl}
-        alt="Profile Pic"
-        className="h-16 w-16 rounded-full"
-        width={56}
-        height={56}
-        // placeholder="blur"
-      />
-      <input
-        placeholder="Enter a tweet here!"
-        className="bg-transparent outline-none"
-      />
+    <div className="flex justify-between">
+      <div className="flex w-full gap-3">
+        <Image
+          src={user.profileImageUrl}
+          alt="Profile Pic"
+          className="h-16 w-16 rounded-full"
+          width={56}
+          height={56}
+          // placeholder="blur"
+        />
+        <input
+          placeholder="Tweet some emojis!"
+          className="bg-transparent outline-none"
+          type="text"
+          value={tweetContent}
+          onChange={(e) => {
+            setTweetContent(e.target.value);
+          }}
+          disabled={isPosting}
+        />
+      </div>
+      <button onClick={() => mutate({ content: tweetContent })}>Post</button>
     </div>
   );
 };
@@ -54,7 +74,7 @@ const PostView = (props: PostWithUser) => {
           <span>{`@${author.username!}`}</span>
           <span>{` · ${dayjs(post.createdAt).fromNow()}`}</span>
         </div>
-        <span className="text-xl"> {post.content}</span>
+        <span className="text-2xl"> {post.content}</span>
       </div>
     </div>
   );
@@ -69,7 +89,7 @@ const Feed = () => {
 
   return (
     <div className="flex flex-col">
-      {[...data]?.map((fullPost) => (
+      {data?.map((fullPost) => (
         <PostView {...fullPost} key={fullPost.post.id} />
       ))}
     </div>
