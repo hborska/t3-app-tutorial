@@ -6,7 +6,7 @@ import { RouterOutputs, api } from "~/utils/api";
 
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { LoadingPage, LoadingSpinner } from "~/components/loading";
+import { LoadingPage } from "~/components/loading";
 import { NextPage } from "next/types";
 
 // Need to do for dayjs to work properly
@@ -54,7 +54,7 @@ const PostView = (props: PostWithUser) => {
           <span>{`@${author.username!}`}</span>
           <span>{` · ${dayjs(post.createdAt).fromNow()}`}</span>
         </div>
-        <span> {post.content}</span>
+        <span className="text-xl"> {post.content}</span>
       </div>
     </div>
   );
@@ -76,6 +76,7 @@ const Feed = () => {
   );
 };
 
+// Can also bind to the NextPage type
 export default function Home() {
   const { isLoaded: userLoaded, isSignedIn } = useUser(); // just binding isLoaded to a name here (not TS stuff)
 
