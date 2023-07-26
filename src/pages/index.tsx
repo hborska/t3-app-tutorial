@@ -9,6 +9,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { LoadingPage } from "~/components/loading";
 import { NextPage } from "next/types";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 // Need to do for dayjs to work properly
 dayjs.extend(relativeTime);
@@ -23,6 +24,10 @@ const CreatePostWizard = () => {
     onSuccess: () => {
       setTweetContent("");
       ctx.posts.getAll.invalidate();
+    },
+
+    onError: () => {
+      toast.error("Failed to post! Please try again later.");
     },
   });
 
