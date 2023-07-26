@@ -6,7 +6,7 @@ import { RouterOutputs, api } from "~/utils/api";
 
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { LoadingPage } from "~/components/loading";
+import { LoadingPage, LoadingSpinner } from "~/components/loading";
 import { NextPage } from "next/types";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -16,6 +16,7 @@ dayjs.extend(relativeTime);
 
 const CreatePostWizard = () => {
   const { user } = useUser();
+  // in production, will re render every time we call this, so wouldn't actually do this in prod (use form)
   const [tweetContent, setTweetContent] = useState("");
   const ctx = api.useContext();
 
@@ -26,8 +27,13 @@ const CreatePostWizard = () => {
       ctx.posts.getAll.invalidate();
     },
 
-    onError: () => {
-      toast.error("Failed to post! Please try again later.");
+    onError: (e) => {
+      const errorMsg = e.data?.zodError?.fieldErrors.content;
+      if (errorMsg && errorMsg[0]) {
+        toast.error(errorMsg[0]!); // non null assertion with the ! here
+      } else {
+        toast.error("Failed to post. Please try again later.");
+      }
     },
   });
 
@@ -52,10 +58,32 @@ const CreatePostWizard = () => {
           onChange={(e) => {
             setTweetContent(e.target.value);
           }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              // Also want to tweet when we just press enter
+              e.preventDefault();
+              if (tweetContent !== "") {
+                mutate({ content: tweetContent });
+              }
+            }
+          }}
           disabled={isPosting}
         />
       </div>
-      <button onClick={() => mutate({ content: tweetContent })}>Post</button>
+
+      {tweetContent !== "" && !isPosting && (
+        <button
+          onClick={() => mutate({ content: tweetContent })}
+          disabled={isPosting}
+        >
+          Post
+        </button>
+      )}
+      {isPosting && (
+        <div className="flex flex-col justify-center">
+          <LoadingSpinner size={24} />
+        </div>
+      )}
     </div>
   );
 };

@@ -70,7 +70,12 @@ export const postsRouter = createTRPCRouter({
   // privateProcedure was exported from trpc.ts
   // Since we know it's not undefined (in trpc.ts), no need to worry about null/undefined behavior
   create: privateProcedure
-    .input(z.object({ content: z.string().emoji().min(1).max(280) })) // we know content is a string that is 1 or more char, 280 or less and an emoji
+    // In input, formatting and adding custom error msg in emoji("...")
+    .input(
+      z.object({
+        content: z.string().emoji("You can only post emojis.").min(1).max(280),
+      })
+    ) // we know content is a string that is 1 or more char, 280 or less and an emoji
     .mutation(async ({ ctx, input }) => {
       const authorId = ctx.userId;
 
