@@ -23,14 +23,14 @@ const CreatePostWizard = () => {
 
   // Calling private procedure function from posts.ts
   const { mutate, isLoading: isPosting } = api.posts.create.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       setTweetContent("");
-      ctx.posts.getAll.invalidate();
+      await ctx.posts.getAll.invalidate();
     },
 
     onError: (e) => {
       const errorMsg = e.data?.zodError?.fieldErrors.content;
-      if (errorMsg && errorMsg[0]) {
+      if (errorMsg?.[0]) {
         toast.error(errorMsg[0]!); // non null assertion with the ! here
       } else {
         toast.error("Failed to post. Please try again later.");

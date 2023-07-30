@@ -63,6 +63,7 @@ export const getStaticProps: GetStaticProps = async (context) => {
   };
 };
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export const getStaticPaths: GetStaticPaths = async () => {
   return { paths: [], fallback: "blocking" }; // generate on load
 };
