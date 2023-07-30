@@ -10,6 +10,29 @@ import {
 import { Ratelimit } from "@upstash/ratelimit"; // for deno: see above
 import { Redis } from "@upstash/redis";
 import { filterUserForClient } from "~/server/helpers/filterUserForClient";
+import type { Post } from "@prisma/client";
+
+// For key in profile post feed, don't want to attach on frontend
+const addUserDataToPosts = async (posts: Post[]) => {
+  const users = (
+    await clerkClient.users.getUserList({
+      // Getting users matching this userId, max of 100
+      userId: posts.map((post) => post.authorId),
+      limit: 100,
+    })
+  ).map(filterUserForClient);
+
+  return posts.map((post) => {
+    const author = users.find((user) => user.id === post.authorId);
+
+    if (!author)
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Author for post not found",
+      });
+    return { post, author };
+  });
+};
 
 // Create a new ratelimiter, that allows 3 requests per 1 min
 const ratelimit = new Ratelimit({
@@ -36,25 +59,20 @@ export const postsRouter = createTRPCRouter({
       ],
     });
 
-    const users = (
-      await clerkClient.users.getUserList({
-        // Getting users matching this userId, max of 100
-        userId: posts.map((post) => post.authorId),
-        limit: 100,
-      })
-    ).map(filterUserForClient);
-
-    return posts.map((post) => {
-      const author = users.find((user) => user.id === post.authorId);
-
-      if (!author)
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Author for post not found",
-        });
-      return { post, author };
-    });
+    return addUserDataToPosts(posts);
   }),
+
+  getPostsByUserId: publicProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(({ ctx, input }) =>
+      ctx.prisma.post
+        .findMany({
+          where: { authorId: input.userId },
+          take: 100,
+          orderBy: [{ createdAt: "desc" }],
+        })
+        .then(addUserDataToPosts)
+    ),
 
   // Route to create a post: must be private TRPC procedure
   // privateProcedure was exported from trpc.ts

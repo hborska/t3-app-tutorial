@@ -1,19 +1,13 @@
-import { SignIn, SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
-import Head from "next/head";
-import Link from "next/link";
+import { SignInButton, useUser } from "@clerk/nextjs";
 import Image from "next/image";
-import { RouterOutputs, api } from "~/utils/api";
+import { api } from "~/utils/api";
 
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import { LoadingPage, LoadingSpinner } from "~/components/loading";
 import { NextPage } from "next/types";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
-
-// Need to do for dayjs to work properly
-dayjs.extend(relativeTime);
+import { PostView } from "~/components/postview";
 
 const CreatePostWizard = () => {
   const { user } = useUser();
@@ -85,35 +79,6 @@ const CreatePostWizard = () => {
           <LoadingSpinner size={24} />
         </div>
       )}
-    </div>
-  );
-};
-
-// Type of PostView is whatever getAll returns, so no need to put all fields in manually
-type PostWithUser = RouterOutputs["posts"]["getAll"][number];
-const PostView = (props: PostWithUser) => {
-  const { post, author } = props; // deconstructing to get fields we need
-  return (
-    <div key={post.id} className="flex gap-3 border-b border-slate-400 p-4">
-      <Image
-        src={author.profileImageUrl}
-        alt={`@${author.username}'s profile picture`}
-        className="h-14 w-14 rounded-full"
-        width={56}
-        height={56}
-        // placeholder="blur"
-      />
-      <div>
-        <div className="flex gap-1 font-thin text-slate-300">
-          <Link href={`/@${author.username}`}>
-            <span>{`@${author.username!}`}</span>
-          </Link>
-          <Link href={`/post/${post.id}`}>
-            <span>{` · ${dayjs(post.createdAt).fromNow()}`}</span>
-          </Link>
-        </div>
-        <span className="text-2xl"> {post.content}</span>
-      </div>
     </div>
   );
 };
