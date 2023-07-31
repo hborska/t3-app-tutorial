@@ -74,6 +74,19 @@ export const postsRouter = createTRPCRouter({
         .then(addUserDataToPosts)
     ),
 
+  getSinglePostById: publicProcedure
+    .input(z.object({ postId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const post = await ctx.prisma.post.findUnique({
+        where: {
+          id: input.postId,
+        },
+      });
+      if (!post) throw new TRPCError({ code: "NOT_FOUND" });
+
+      return (await addUserDataToPosts([post]))[0];
+    }),
+
   // Route to create a post: must be private TRPC procedure
   // privateProcedure was exported from trpc.ts
   // Since we know it's not undefined (in trpc.ts), no need to worry about null/undefined behavior
